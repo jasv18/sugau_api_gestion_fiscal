@@ -8,7 +8,7 @@
     "dev": "cross-env NODE_ENV=development nodemon index.js",
     "test": "echo \"Error: no test specified\" && exit 1"
   },
-  "author": "",
+  "author": "José A Sanguinetti V",
   "license": "ISC",
   "dependencies": {
     "cors": "^2.8.5",
