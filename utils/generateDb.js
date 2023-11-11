@@ -5,7 +5,7 @@ const uniqueId = require('./uniqueId')
 const { unlink } = require('node:fs')
 
 
-async function dumpDb({ host, port, user, password, database, filePath, dataTableToExclude }) {
+async function dumpDb({ host, port, user, password, database, filePath, dataTableToExclude = [] }) {
   const { stdout, stderr } = await pgDump(
     {
       port, // defaults to 5432
@@ -17,7 +17,7 @@ async function dumpDb({ host, port, user, password, database, filePath, dataTabl
     {
       format: FormatEnum.Custom,
       filePath,
-      excludeTableDataPattern: dataTableToExclude.length !== 0 ? [...dataTableToExclude] : undefined
+      excludeTableDataPattern: dataTableToExclude
     },
   )
 }
