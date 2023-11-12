@@ -3,6 +3,7 @@ const { prepareForDump, createDatabase, afterDump, afterRestore } = require('../
 const { getSchemaSpecifics } = require('./getSchemaSpecifics')
 const uniqueId = require('./uniqueId')
 const { unlink } = require('node:fs')
+const { getDatabases } = require('./../db/pg')
 
 
 async function dumpDb({ host, port, user, password, database, filePath, dataTableToExclude = [] }) {
@@ -36,6 +37,9 @@ async function restoreDb({ host, port, user, password, database, filePath }) {
 }
 
 const generateDb = async ({ credentials, srcDatabase, dstDatabase, payrolls }) => {
+  const rows = await getDatabases({ credentials })
+  const datNames = rows.map(({ datname }) => datname)
+  if (datNames.includes(dstDatabase)) throw new Error('Database already exists')
   const tempId = uniqueId()
   const filePath = `${srcDatabase}${tempId}.dump`
   const { dataTableToExclude, tableDataToInclude } = getSchemaSpecifics(payrolls)

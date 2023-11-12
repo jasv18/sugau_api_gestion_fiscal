@@ -8,7 +8,6 @@ const errorHandler = (err, req, res, next) => {
         error_msg: err.message,
         success: false
     })
-    next(err)
 }
 
 module.exports = errorHandler
