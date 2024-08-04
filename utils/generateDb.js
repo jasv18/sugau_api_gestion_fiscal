@@ -36,8 +36,9 @@ async function restoreDb({ host, port, user, password, database, filePath }) {
   )
 }
 
-const generateDb = async ({ credentials, srcDatabase, dstDatabase, payrolls }) => {
-  const rows = await getDatabases({ credentials })
+const generateDb = async ({ host, user, password, port, srcDatabase, dstDatabase, payrolls }) => {
+  const credentials = { host, user, password, port }
+  const rows = await getDatabases(credentials)
   const datNames = rows.map(({ datname }) => datname)
   if (datNames.includes(dstDatabase)) throw new Error('Database already exists')
   const tempId = uniqueId()

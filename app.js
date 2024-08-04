@@ -6,7 +6,6 @@ const databasesRouter = require('./controllers/databases')
 const decryptBody = require('./utils/middleware/decryptBody')
 const errorHandler = require('./utils/middleware/errorHandler')
 const requestLogger = require('./utils/middleware/requestLogger')
-const { credentialsExtractor } = require('./utils/middleware/bodyFieldsCheck')
 const unknownEndpoint = require('./utils/middleware/unknownEndpoint')
 const connectionsRouter = require('./controllers/connections')
 const app = express()
@@ -17,12 +16,12 @@ app.use(express.json())
 app.use(bodyParser.text())
 app.use(requestLogger)
 app.use(decryptBody)
-app.use(credentialsExtractor)
+
 app.set('x-powered-by', false)
 
-app.use('/api/serverconn', connectionsRouter)
+app.use('/api/auth', connectionsRouter)
 
-app.use('/api/databaseconn', databasesRouter)
+app.use('/api/databases', databasesRouter)
 
 app.use(unknownEndpoint)
 

@@ -2,14 +2,22 @@ const { Pool } = require('pg')
 
 const getNewPool = ( credentials ) => new Pool({ ...credentials, connectionTimeoutMillis: 4000 })
 
-const connectionValidation = async ({ credentials }) => {
+const connectionValidation = async ({ host, user, password, port }) => {
+    if (!host || !user || !password) {
+        throw new Error('missing required credentials properties: host, user, password')
+    }
+    const credentials = { host, user, password, port }
     const pool = getNewPool(credentials)
     const client = await pool.connect()
     await client.release(true)
     await pool.end()
 }
 
-const getDatabases = async ({ credentials }) => {
+const getDatabases = async ({ host, user, password, port }) => {
+    if (!host || !user || !password) {
+        throw new Error('missing required credentials properties: host, user, password')
+    }
+    const credentials = { host, user, password, port }
     const pool = getNewPool(credentials)
     const client = await pool.connect()    
     try {
@@ -23,7 +31,11 @@ const getDatabases = async ({ credentials }) => {
     }
 }
 
-const getPayrollsFromDatabase = async (credentials) => {
+const getPayrollsFromDatabase = async ({ host, user, password, port, database }) => {
+    if (!host || !user || !password) {
+        throw new Error('missing required credentials properties: host, user, password')
+    }
+    const credentials = { host, user, password, port, database }
     const pool = getNewPool(credentials)
     const client = await pool.connect()
     try {
@@ -79,7 +91,7 @@ const afterDump = async ({ host, port, user, password, database, tableDataToIncl
 }
 
 const createDatabase = async ({ databasename = '', host, port, user, password } = { databasename: '' }) => {
-    if (!databasename) { /** thrown an error */ }
+    if (!databasename) { throw new Error('new database name missing') }
     const pool = getNewPool({ host, port, user, password })
     const client = await pool.connect()
     try {
@@ -95,7 +107,7 @@ const createDatabase = async ({ databasename = '', host, port, user, password } 
 }
 
 const afterRestore = async ({ host, port, user, password, database, tableDataIncluded } = { tableDataIncluded: [] }) => {
-    if (!database) { /** thrown an error */ }
+    if (!database) { throw new Error('missing database') }
     if (tableDataIncluded.length === 0) return
     const stringTableData = tableDataIncluded.map(value => `tmp_${value.table_name}`).join(',')
     const pool = getNewPool({ host, port, user, password, database })

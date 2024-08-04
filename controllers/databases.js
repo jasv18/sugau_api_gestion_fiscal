@@ -1,22 +1,30 @@
 const db = require('../db/pg')
 const { generateDb } = require('../utils/generateDb')
-const { payrollsExtractor } = require('../utils/middleware/bodyFieldsCheck')
 
 const databasesRouter = require('express').Router()
 
-databasesRouter.post('/:srcdatabase/payrolls', async (req, res) => {
+databasesRouter.get('/', async (req, res) => {
+    const { host, user, password, port } = req.body.payload
+    const credentials = { host, user, password, port }
+
+    const rows = await db.getDatabases(credentials)
+    res.status(200).send({ data: rows, success: true })
+})
+
+databasesRouter.get('/:srcdatabase/payrolls', async (req, res) => {
     const database = req.params.srcdatabase
-    const { credentials } = req.body
+    const { host, user, password, port } = req.body.payload
+    const credentials = { host, user, password, port }
     const rows = await db.getPayrollsFromDatabase({ ...credentials, database})
     res.status(200).send({ data: rows, success: true })
 })
 
-databasesRouter.post('/:srcdatabase/generate/:dstdatabase', payrollsExtractor, async(req, res) => {
+databasesRouter.post('/:srcdatabase/generate', async(req, res) => {
     const srcDatabase = req.params.srcdatabase
-    const dstDatabase = req.params.dstdatabase
-    const { credentials, payrolls } = req.body
+    const { host, user, password, port, database: dstDatabase, payrolls } = req.body.payload
+    const credentials = { host, user, password, port }
     await generateDb({
-        credentials,
+        ... credentials,
         srcDatabase,
         dstDatabase,
         payrolls

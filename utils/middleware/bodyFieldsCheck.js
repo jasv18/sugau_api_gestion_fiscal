@@ -1,3 +1,7 @@
+/**
+ * deprecated
+ */
+
 const credentialsExtractor = (req, res, next) => {
     try {
         const { host, user, password, port } = req.body.payload
