@@ -1,25 +1,33 @@
 const { Pool } = require('pg')
 
+const requiredPropsCredentials = ['host', 'user', 'password']
+
 const getNewPool = ( credentials ) => new Pool({ ...credentials, connectionTimeoutMillis: 4000 })
 
-const connectionValidation = async ({ host, user, password, port }) => {
-    if (!host || !user || !password) {
-        throw new Error('missing required credentials properties: host, user, password')
-    }
-    const credentials = { host, user, password, port }
-    const pool = getNewPool(credentials)
+const connectToDatabase = async ( credentials ) => {
+    const pool = getNewPool( credentials )
     const client = await pool.connect()
+    return { pool, client }
+}
+
+const ensuresRequiredProps = ( obj, requiredProps ) => {
+    requiredProps.forEach( prop => {
+        if ( !obj[prop] ) {
+            throw new Error(`missing required property: ${prop}`)
+        }
+    })
+}
+
+const connectionValidation = async ( credentials ) => {
+    ensuresRequiredProps( credentials, requiredPropsCredentials )
+    const { pool, client } = await connectToDatabase( credentials )
     await client.release(true)
     await pool.end()
 }
 
-const getDatabases = async ({ host, user, password, port }) => {
-    if (!host || !user || !password) {
-        throw new Error('missing required credentials properties: host, user, password')
-    }
-    const credentials = { host, user, password, port }
-    const pool = getNewPool(credentials)
-    const client = await pool.connect()    
+const getDatabases = async ( credentials ) => {
+    ensuresRequiredProps( credentials, requiredPropsCredentials )
+    const { pool, client } = await connectToDatabase( credentials )
     try {
         const { rows } = await client.query('select datname, encoding, datctype from pg_database where datallowconn = true and datistemplate = false')
         return rows
@@ -31,13 +39,9 @@ const getDatabases = async ({ host, user, password, port }) => {
     }
 }
 
-const getPayrollsFromDatabase = async ({ host, user, password, port, database }) => {
-    if (!host || !user || !password) {
-        throw new Error('missing required credentials properties: host, user, password')
-    }
-    const credentials = { host, user, password, port, database }
-    const pool = getNewPool(credentials)
-    const client = await pool.connect()
+const getPayrollsFromDatabase = async ( credentials ) => {
+    ensuresRequiredProps( credentials, [...requiredPropsCredentials, 'database'] )
+    const { pool, client } = await connectToDatabase( credentials )
     try {
         const { rows } = await client.query('select codemp, codnom, desnom, despernom, anocurnom, fecininom from sno_nomina;')
         return rows
@@ -49,12 +53,11 @@ const getPayrollsFromDatabase = async ({ host, user, password, port, database })
     }
 }
 
-const prepareForDump = async ({ host, port, user, password, database, tableDataToInclude = [] } = { tableDataToInclude: [] }) => {    
-    if (tableDataToInclude.length === 0) return
-    if (!database) { throw new Error('missing argument') }
+const prepareForDump = async ( credentials, tableDataToInclude ) => {
+    if (!tableDataToInclude || !Array.isArray(tableDataToInclude) || tableDataToInclude.length === 0) return
+    ensuresRequiredProps( credentials, [...requiredPropsCredentials, 'database'] )
+    const { pool, client } = await connectToDatabase( credentials )
     const stringTableData = tableDataToInclude.map(value => `tmp_${value.table_name}`).join(',')
-    const pool = getNewPool({ host, port, user, password, database })
-    const client = await pool.connect()
     try {
         await client.query('begin')
         await client.query(`drop table if exists ${stringTableData}`)
@@ -71,12 +74,11 @@ const prepareForDump = async ({ host, port, user, password, database, tableDataT
     }
 }
 
-const afterDump = async ({ host, port, user, password, database, tableDataToInclude = [] } = { tableDataToInclude: [] }) => {    
-    if (tableDataToInclude.length === 0) return
-    if (!database) { throw new Error('missing argument') }
+const afterDump = async ( credentials, tableDataToInclude ) => {    
+    if (!tableDataToInclude || !Array.isArray(tableDataToInclude) || tableDataToInclude.length === 0) return
+    ensuresRequiredProps( credentials, [...requiredPropsCredentials, 'database'] )
+    const { pool, client } = await connectToDatabase( credentials )
     const stringTableData = tableDataToInclude.map(value => `tmp_${value.table_name}`).join(',')
-    const pool = getNewPool({ host, port, user, password, database })
-    const client = await pool.connect()
     try {
         await client.query('begin')
         await client.query(`drop table if exists ${stringTableData}`)
@@ -90,10 +92,10 @@ const afterDump = async ({ host, port, user, password, database, tableDataToIncl
     }
 }
 
-const createDatabase = async ({ databasename = '', host, port, user, password } = { databasename: '' }) => {
+const createDatabase = async ( credentials, databasename) => {
     if (!databasename) { throw new Error('new database name missing') }
-    const pool = getNewPool({ host, port, user, password })
-    const client = await pool.connect()
+    ensuresRequiredProps( credentials, [...requiredPropsCredentials] )
+    const { pool, client } = await connectToDatabase( credentials )
     try {
         await client.query(`drop database if exists ${databasename}`)
         await client.query(`create database ${databasename} with template template0`)
@@ -106,12 +108,11 @@ const createDatabase = async ({ databasename = '', host, port, user, password } 
     }
 }
 
-const afterRestore = async ({ host, port, user, password, database, tableDataIncluded } = { tableDataIncluded: [] }) => {
-    if (!database) { throw new Error('missing database') }
-    if (tableDataIncluded.length === 0) return
+const afterRestore = async (credentials, tableDataIncluded) => {
+    if (!tableDataIncluded || !Array.isArray(tableDataIncluded) || tableDataIncluded.length === 0) return
+    ensuresRequiredProps( credentials, [...requiredPropsCredentials, 'database'] )
+    const { pool, client } = await connectToDatabase( credentials )
     const stringTableData = tableDataIncluded.map(value => `tmp_${value.table_name}`).join(',')
-    const pool = getNewPool({ host, port, user, password, database })
-    const client = await pool.connect()
     try {
         await client.query('begin')
         await client.query('SET session_replication_role = replica')

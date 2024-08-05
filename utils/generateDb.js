@@ -44,13 +44,13 @@ const generateDb = async ({ host, user, password, port, srcDatabase, dstDatabase
   const tempId = uniqueId()
   const filePath = `${srcDatabase}${tempId}.dump`
   const { dataTableToExclude, tableDataToInclude } = getSchemaSpecifics(payrolls)
-  await prepareForDump({ ...credentials, database: srcDatabase, tableDataToInclude })
+  await prepareForDump({ ...credentials, database: srcDatabase }, tableDataToInclude)
   await dumpDb({ ...credentials, filePath, database: srcDatabase, dataTableToExclude })
-  await afterDump({ ...credentials, database: srcDatabase, tableDataToInclude })
+  await afterDump({ ...credentials, database: srcDatabase }, tableDataToInclude)
   const tableDataIncluded = JSON.parse(JSON.stringify(tableDataToInclude))
-  await createDatabase({ ...credentials, databasename: dstDatabase })
+  await createDatabase(credentials, dstDatabase)
   await restoreDb({ ...credentials, filePath, database: dstDatabase })
-  await afterRestore({ ...credentials, database: dstDatabase, tableDataIncluded })
+  await afterRestore({ ...credentials, database: dstDatabase }, tableDataIncluded)
   unlink(`./${filePath}`, (err) => {
     if (err) console.error(err)
   })
