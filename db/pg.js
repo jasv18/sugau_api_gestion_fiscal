@@ -54,7 +54,9 @@ const getPayrollsFromDatabase = async ( credentials ) => {
 }
 
 const prepareForDump = async ( credentials, tableDataToInclude ) => {
-    if (!tableDataToInclude || !Array.isArray(tableDataToInclude) || tableDataToInclude.length === 0) return
+    if (!tableDataToInclude || !Array.isArray(tableDataToInclude) || tableDataToInclude.length === 0) {
+        return
+    }
     ensuresRequiredProps( credentials, [...requiredPropsCredentials, 'database'] )
     const { pool, client } = await connectToDatabase( credentials )
     const stringTableData = tableDataToInclude.map(value => `tmp_${value.table_name}`).join(',')
@@ -75,7 +77,9 @@ const prepareForDump = async ( credentials, tableDataToInclude ) => {
 }
 
 const afterDump = async ( credentials, tableDataToInclude ) => {    
-    if (!tableDataToInclude || !Array.isArray(tableDataToInclude) || tableDataToInclude.length === 0) return
+    if (!tableDataToInclude || !Array.isArray(tableDataToInclude) || tableDataToInclude.length === 0) {
+        return
+    }
     ensuresRequiredProps( credentials, [...requiredPropsCredentials, 'database'] )
     const { pool, client } = await connectToDatabase( credentials )
     const stringTableData = tableDataToInclude.map(value => `tmp_${value.table_name}`).join(',')
@@ -109,7 +113,9 @@ const createDatabase = async ( credentials, databasename) => {
 }
 
 const afterRestore = async (credentials, tableDataIncluded) => {
-    if (!tableDataIncluded || !Array.isArray(tableDataIncluded) || tableDataIncluded.length === 0) return
+    if (!tableDataIncluded || !Array.isArray(tableDataIncluded) || tableDataIncluded.length === 0) {
+        return
+    }
     ensuresRequiredProps( credentials, [...requiredPropsCredentials, 'database'] )
     const { pool, client } = await connectToDatabase( credentials )
     const stringTableData = tableDataIncluded.map(value => `tmp_${value.table_name}`).join(',')
