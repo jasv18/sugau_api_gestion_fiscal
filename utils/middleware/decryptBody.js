@@ -1,11 +1,11 @@
-const encryption = require('../encryption')
+import { objectDecryption } from '../encryption.js'
 
 const decryptBody = (req, res, next) => {
     if (req.is('text/*') && req.body) {
-        const decryptedBody = encryption.objectDecryption(req.body.toString())
+        const decryptedBody = objectDecryption(req.body.toString())
         req.body = { payload: decryptedBody }
     }
     next()
 }
 
-module.exports = decryptBody
+export default decryptBody

@@ -1,19 +1,18 @@
-require('express-async-errors')
-const cors = require('cors')
-const express = require('express')
-const bodyParser = require('body-parser')
-const databasesRouter = require('./controllers/databases')
-const decryptBody = require('./utils/middleware/decryptBody')
-const errorHandler = require('./utils/middleware/errorHandler')
-const requestLogger = require('./utils/middleware/requestLogger')
-const unknownEndpoint = require('./utils/middleware/unknownEndpoint')
-const connectionsRouter = require('./controllers/connections')
+import 'express-async-errors'
+import cors from 'cors'
+import express, { json, text } from 'express'
+import databasesRouter from './controllers/databases.js'
+import decryptBody from './utils/middleware/decryptBody.js'
+import errorHandler from './utils/middleware/errorHandler.js'
+import requestLogger from './utils/middleware/requestLogger.js'
+import unknownEndpoint from './utils/middleware/unknownEndpoint.js'
+import connectionsRouter from './controllers/connections.js'
 const app = express()
 
 app.use(cors())
-app.use(express.static('dist'))
-app.use(express.json())
-app.use(bodyParser.text())
+//app.use(static('dist'))
+app.use(json())
+app.use(text())
 app.use(requestLogger)
 app.use(decryptBody)
 
@@ -27,4 +26,4 @@ app.use(unknownEndpoint)
 
 app.use(errorHandler)
 
-module.exports = app
+export default app

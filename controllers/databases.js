@@ -1,13 +1,14 @@
-const db = require('../db/pg')
-const { generateDb } = require('../utils/generateDb')
+import { getDatabases, getPayrollsFromDatabase } from '../db/pg.js'
+import { generateDb } from '../utils/generateDb.js'
+import { Router } from 'express'
 
-const databasesRouter = require('express').Router()
+const databasesRouter = Router()
 
 databasesRouter.get('/', async (req, res) => {
     const { host, user, password, port } = req.body.payload
     const credentials = { host, user, password, port }
 
-    const rows = await db.getDatabases(credentials)
+    const rows = await getDatabases(credentials)
     res.status(200).send({ data: rows, success: true })
 })
 
@@ -15,7 +16,7 @@ databasesRouter.get('/:srcdatabase/payrolls', async (req, res) => {
     const database = req.params.srcdatabase
     const { host, user, password, port } = req.body.payload
     const credentials = { host, user, password, port }
-    const rows = await db.getPayrollsFromDatabase({ ...credentials, database})
+    const rows = await getPayrollsFromDatabase({ ...credentials, database})
     res.status(200).send({ data: rows, success: true })
 })
 
@@ -32,5 +33,5 @@ databasesRouter.post('/:srcdatabase/generate', async(req, res) => {
     res.status(200).send({ success: true })
 })
 
-module.exports = databasesRouter
+export default databasesRouter
 

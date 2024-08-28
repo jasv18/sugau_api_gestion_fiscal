@@ -1,4 +1,6 @@
-const { Pool } = require('pg')
+import pg from 'pg'
+
+const { Pool } = pg
 
 const requiredPropsCredentials = ['host', 'user', 'password']
 
@@ -18,14 +20,14 @@ const ensuresRequiredProps = ( obj, requiredProps ) => {
     })
 }
 
-const connectionValidation = async ( credentials ) => {
+export const connectionValidation = async ( credentials ) => {
     ensuresRequiredProps( credentials, requiredPropsCredentials )
     const { pool, client } = await connectToDatabase( credentials )
     await client.release(true)
     await pool.end()
 }
 
-const getDatabases = async ( credentials ) => {
+export const getDatabases = async ( credentials ) => {
     ensuresRequiredProps( credentials, requiredPropsCredentials )
     const { pool, client } = await connectToDatabase( credentials )
     try {
@@ -39,7 +41,7 @@ const getDatabases = async ( credentials ) => {
     }
 }
 
-const getPayrollsFromDatabase = async ( credentials ) => {
+export const getPayrollsFromDatabase = async ( credentials ) => {
     ensuresRequiredProps( credentials, [...requiredPropsCredentials, 'database'] )
     const { pool, client } = await connectToDatabase( credentials )
     try {
@@ -53,7 +55,7 @@ const getPayrollsFromDatabase = async ( credentials ) => {
     }
 }
 
-const prepareForDump = async ( credentials, tableDataToInclude ) => {
+export const prepareForDump = async ( credentials, tableDataToInclude ) => {
     if (!tableDataToInclude || !Array.isArray(tableDataToInclude) || tableDataToInclude.length === 0) {
         return
     }
@@ -76,7 +78,7 @@ const prepareForDump = async ( credentials, tableDataToInclude ) => {
     }
 }
 
-const afterDump = async ( credentials, tableDataToInclude ) => {    
+export const afterDump = async ( credentials, tableDataToInclude ) => {    
     if (!tableDataToInclude || !Array.isArray(tableDataToInclude) || tableDataToInclude.length === 0) {
         return
     }
@@ -96,7 +98,7 @@ const afterDump = async ( credentials, tableDataToInclude ) => {
     }
 }
 
-const createDatabase = async ( credentials, databasename) => {
+export const createDatabase = async ( credentials, databasename) => {
     if (!databasename) { throw new Error('new database name missing') }
     ensuresRequiredProps( credentials, [...requiredPropsCredentials] )
     const { pool, client } = await connectToDatabase( credentials )
@@ -112,7 +114,7 @@ const createDatabase = async ( credentials, databasename) => {
     }
 }
 
-const afterRestore = async (credentials, tableDataIncluded) => {
+export const afterRestore = async (credentials, tableDataIncluded) => {
     if (!tableDataIncluded || !Array.isArray(tableDataIncluded) || tableDataIncluded.length === 0) {
         return
     }
@@ -135,14 +137,4 @@ const afterRestore = async (credentials, tableDataIncluded) => {
         await client.release(true)
         await pool.end()
     }
-}
-
-module.exports = { 
-    connectionValidation,
-    getDatabases,
-    getPayrollsFromDatabase,
-    prepareForDump,
-    createDatabase,
-    afterDump,
-    afterRestore
 }

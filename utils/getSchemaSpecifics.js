@@ -14,7 +14,7 @@ const tableData = [
   { table_name: 'sss_derechos_usuarios', where_clause: "codintper ='---------------------------------'" }
 ]
 
-const getSchemaSpecifics = ( payrolls = []) => {
+export const getSchemaSpecifics = ( payrolls = []) => {
   let tableDataToInclude
     if (!payrolls || payrolls.length === 0) {
       tableDataToInclude = JSON.parse(JSON.stringify(tableData))
@@ -29,5 +29,3 @@ const getSchemaSpecifics = ( payrolls = []) => {
     tableDataToInclude.push(...formatPayrollTableData)
     return { dataTableToExclude, tableDataToInclude }
 }
-
-module.exports = { getSchemaSpecifics }

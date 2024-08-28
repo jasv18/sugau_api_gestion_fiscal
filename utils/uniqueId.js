@@ -1,5 +1,3 @@
-const { v4: uuidv4 } = require('uuid')
+import { v4 as uuidv4 } from 'uuid'
 
-const uniqueId = () => uuidv4()
-
-module.exports = uniqueId
+export const uniqueId = () => uuidv4()

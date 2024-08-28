@@ -1,9 +1,8 @@
-const { pgDump, pgRestore, FormatEnum } = require('pg-dump-restore');
-const { prepareForDump, createDatabase, afterDump, afterRestore } = require('../db/pg')
-const { getSchemaSpecifics } = require('./getSchemaSpecifics')
-const uniqueId = require('./uniqueId')
-const { unlink } = require('node:fs')
-const { getDatabases } = require('./../db/pg')
+import { pgDump, pgRestore, FormatEnum } from 'pg-dump-restore';
+import { getDatabases, prepareForDump, createDatabase, afterDump, afterRestore } from '../db/pg.js';
+import { getSchemaSpecifics } from './getSchemaSpecifics.js';
+import { uniqueId } from './uniqueId.js';
+import { unlink } from 'node:fs';
 
 
 async function dumpDb({ host, port, user, password, database, filePath, dataTableToExclude = [] }) {
@@ -36,7 +35,7 @@ async function restoreDb({ host, port, user, password, database, filePath }) {
   )
 }
 
-const generateDb = async ({ host, user, password, port, srcDatabase, dstDatabase, payrolls }) => {
+export const generateDb = async ({ host, user, password, port, srcDatabase, dstDatabase, payrolls }) => {
   const credentials = { host, user, password, port }
   const rows = await getDatabases(credentials)
   const datNames = rows.map(({ datname }) => datname)
@@ -55,5 +54,3 @@ const generateDb = async ({ host, user, password, port, srcDatabase, dstDatabase
     if (err) console.error(err)
   })
 }
-
-module.exports = { generateDb }
