@@ -1,12 +1,12 @@
 import 'express-async-errors'
 import cors from 'cors'
 import express, { json, text } from 'express'
-import databasesRouter from './controllers/databases.js'
-import decryptBody from './utils/middleware/decryptBody.js'
-import errorHandler from './utils/middleware/errorHandler.js'
-import requestLogger from './utils/middleware/requestLogger.js'
-import unknownEndpoint from './utils/middleware/unknownEndpoint.js'
-import connectionsRouter from './controllers/connections.js'
+import databasesRouter from './routes/databases.js'
+import decryptBody from './middleware/decryptBody.js'
+import errorHandler from './middleware/errorHandler.js'
+import requestLogger from './middleware/requestLogger.js'
+import unknownEndpoint from './middleware/unknownEndpoint.js'
+import connectionsRouter from './routes/connections.js'
 const app = express()
 
 app.use(cors())

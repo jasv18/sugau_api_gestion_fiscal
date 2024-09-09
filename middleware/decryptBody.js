@@ -1,4 +1,4 @@
-import { objectDecryption } from '../encryption.js'
+import { objectDecryption } from '../utils/encryption.js'
 
 const decryptBody = (req, res, next) => {
     if (req.is('text/*') && req.body) {
