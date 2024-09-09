@@ -1,4 +1,4 @@
-import { getDatabases, getPayrollsFromDatabase } from '../db/pg.js'
+import { getDatabases, getPayrollsFromDatabase } from '../models/postgresql/pg.js'
 import { generateDb } from '../utils/generateDb.js'
 import { Router } from 'express'
 

@@ -1,4 +1,4 @@
-import { connectionValidation } from '../db/pg.js'
+import { connectionValidation } from '../models/postgresql/pg.js'
 import { Router } from 'express'
 
 const connectionsRoutes = Router()
