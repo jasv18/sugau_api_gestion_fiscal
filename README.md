@@ -19,7 +19,9 @@ Esta sección de la pila se dedica a proporcionar los puntos de entrada necesari
 
 > **Nota:** En este momento, el frontend no está funcional ya que se están realizando cambios en el backend.
 
-[![Frontend](https://www.svgrepo.com/show/28442/picture.svg)](https://github.com/jasv18/thesis_frontend.git)
+<a href="https://github.com/jasv18/thesis_frontend.git">
+    <img src="https://www.svgrepo.com/show/28442/picture.svg" alt="Frontend" width="100" height="100">
+</a>
 
 ## Hashtags
 #SUGAU #GestiónFiscal #APIUniversitaria #InnovaciónEducativa #TecnologíaVenezolana
