@@ -69,9 +69,9 @@ export const prepareForDump = async ( credentials, tableDataToInclude ) => {
     try {
         await client.query('begin')
         await client.query(`drop table if exists ${stringTableData}`)
-        tableDataToInclude
-            .map( value => `create table tmp_${value.table_name} as select * from ${value.table_name} where ${value.where_clause}`)
-            .forEach(async statement =>  await client.query(statement))
+        await Promise.all(tableDataToInclude
+            .map( async value => await client.query(`create table tmp_${value.table_name} as select * from ${value.table_name} where ${value.where_clause}`))
+        )   
         await client.query('commit')
     } catch (e) {
         await client.query('rollback')
@@ -128,9 +128,9 @@ export const afterRestore = async (credentials, tableDataIncluded) => {
     try {
         await client.query('begin')
         await client.query('SET session_replication_role = replica')
-        tableDataIncluded
-            .map( value => `insert into ${value.table_name} select * from tmp_${value.table_name}`)
-            .forEach(async statement =>  await client.query(statement))
+        await Promise.all(tableDataIncluded
+            .map( async value => await client.query(`insert into ${value.table_name} select * from tmp_${value.table_name}`))
+        )
         await client.query(`drop table if exists ${stringTableData}`)
         await client.query('SET session_replication_role = DEFAULT')
         await client.query('commit')
