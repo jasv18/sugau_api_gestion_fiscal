@@ -1,6 +1,6 @@
-# BACKEND DE LA API DE GESTIÓN DEL PERÍODO FISCAL
+# BACKEND DE LA API DE GESTIÓN DEL PERÍODO FISCAL (SUGAU)
 
-## Backend de módulo de apertura de ejercicios fiscales
+## Gestión apertura de ejercicios fiscales
 
 ![Computer Science](https://media4.giphy.com/media/wLNuW1tCKRiPmDV5Y4/giphy.gif?cid=ecf05e47b63m94hl3a79mjx3urkuki0nttq6sxpw8clfxgh7&ep=v1_gifs_related&rid=giphy.gif&ct=g)
 
