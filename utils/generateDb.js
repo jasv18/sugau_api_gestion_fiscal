@@ -1,6 +1,10 @@
+/**
+ * deprecated
+ */
+
 import { pgDump, pgRestore, FormatEnum } from 'pg-dump-restore';
 import { getDatabases, prepareForDump, createDatabase, afterDump, afterRestore } from '../models/postgresql/pg.js';
-import { getSchemaSpecifics } from './getSchemaSpecifics.js';
+import { getSchemaSpecifics } from '../models/postgresql/dbUtils/getSchemaSpecifics.js';
 import { uniqueId } from './uniqueId.js';
 import { unlink } from 'node:fs';
 
