@@ -1,8 +1,15 @@
 import pg from 'pg'
 import { pgDump, pgRestore, FormatEnum } from 'pg-dump-restore'
-import { getSchemaSpecifics } from './dbUtils/getSchemaSpecifics'
-import { uniqueId } from '../../utils/uniqueId'
+import { getSchemaSpecifics } from './dbUtils/getSchemaSpecifics.js'
+import { uniqueId } from '../../utils/uniqueId.js'
 import { unlink } from 'node:fs';
+import { isRegExp } from 'node:util/types';
+
+const regexA = /^[a-zA-Z_][a-zA-Z0-9_]*$/
+
+const isRegexValid = (regex) => isRegExp(regex)
+
+const isValueValid = (regex, value) => isRegexValid(regex) && regex.test(value)
 
 const { Pool } = pg
 
@@ -16,7 +23,7 @@ const connectToDatabase = async ( credentials ) => {
     return { pool, client }
 }
 
-const ensuresRequiredProps = ( obj, requiredProps ) => {
+const ensuresRequiredPropsCredentials = ( obj, requiredProps ) => {
     requiredProps.forEach( prop => {
         if ( !obj[prop] ) {
             throw new Error(`missing required property: ${prop}`)
@@ -25,14 +32,14 @@ const ensuresRequiredProps = ( obj, requiredProps ) => {
 }
 
 export const connectionValidation = async ( credentials ) => {
-    ensuresRequiredProps( credentials, requiredPropsCredentials )
+    ensuresRequiredPropsCredentials( credentials, requiredPropsCredentials )
     const { pool, client } = await connectToDatabase( credentials )
     await client.release(true)
     await pool.end()
 }
 
-export const getDatabases = async ( credentials ) => {
-    ensuresRequiredProps( credentials, requiredPropsCredentials )
+export const getAllDatabases = async ( credentials ) => {
+    ensuresRequiredPropsCredentials( credentials, requiredPropsCredentials )
     const { pool, client } = await connectToDatabase( credentials )
     try {
         const { rows } = await client.query('select datname, encoding, datctype from pg_database where datallowconn = true and datistemplate = false')
@@ -45,8 +52,24 @@ export const getDatabases = async ( credentials ) => {
     }
 }
 
+export const getDatabaseByName = async ( credentials, databasename ) => {
+    if (!databasename) { throw new Error('new database name missing') }
+    if (!isValueValid(regexA, databasename)) { throw new Error('invalid databasename') }
+    ensuresRequiredPropsCredentials( credentials, requiredPropsCredentials )
+    const { pool, client } = await connectToDatabase( credentials )
+    try {
+        const { rows } = await client.query("SELECT * FROM pg_database WHERE UPPER(datname) SIMILAR TO UPPER('$1')",[databasename])
+        return rows
+    } catch (e) {
+        throw e
+    } finally {
+        await client.release(true)
+        await pool.end()
+    }
+}
+
 export const getPayrollsFromDatabase = async ( credentials ) => {
-    ensuresRequiredProps( credentials, [...requiredPropsCredentials, 'database'] )
+    ensuresRequiredPropsCredentials( credentials, [...requiredPropsCredentials, 'database'] )
     const { pool, client } = await connectToDatabase( credentials )
     try {
         const { rows } = await client.query('select codemp, codnom, desnom, despernom, anocurnom, fecininom from sno_nomina;')
@@ -63,7 +86,7 @@ export const prepareForDump = async ( credentials, tableDataToInclude ) => {
     if (!tableDataToInclude || !Array.isArray(tableDataToInclude) || tableDataToInclude.length === 0) {
         return
     }
-    ensuresRequiredProps( credentials, [...requiredPropsCredentials, 'database'] )
+    ensuresRequiredPropsCredentials( credentials, [...requiredPropsCredentials, 'database'] )
     const { pool, client } = await connectToDatabase( credentials )
     const stringTableData = tableDataToInclude.map(value => `tmp_${value.table_name}`).join(',')
     try {
@@ -86,7 +109,7 @@ export const afterDump = async ( credentials, tableDataToInclude ) => {
     if (!tableDataToInclude || !Array.isArray(tableDataToInclude) || tableDataToInclude.length === 0) {
         return
     }
-    ensuresRequiredProps( credentials, [...requiredPropsCredentials, 'database'] )
+    ensuresRequiredPropsCredentials( credentials, [...requiredPropsCredentials, 'database'] )
     const { pool, client } = await connectToDatabase( credentials )
     const stringTableData = tableDataToInclude.map(value => `tmp_${value.table_name}`).join(',')
     try {
@@ -104,12 +127,12 @@ export const afterDump = async ( credentials, tableDataToInclude ) => {
 
 export const createDatabase = async ( credentials, databasename) => {
     if (!databasename) { throw new Error('new database name missing') }
-    ensuresRequiredProps( credentials, [...requiredPropsCredentials] )
+    ensuresRequiredPropsCredentials( credentials, [...requiredPropsCredentials] )
     const { pool, client } = await connectToDatabase( credentials )
     try {
-        await client.query(`drop database if exists ${databasename}`)
-        await client.query(`create database ${databasename} with template template0`)
-        await client.query(`update pg_database set encoding=16 where datname='${databasename}'`)
+        // await client.query(`drop database if exists ${databasename}`)
+        await client.query("create database $1 with template template0", [databasename])
+        await client.query("update pg_database set encoding=16 where datname='$1'", [databasename])
     } catch (e) {
         throw e
     } finally {
@@ -122,7 +145,7 @@ export const afterRestore = async (credentials, tableDataIncluded) => {
     if (!tableDataIncluded || !Array.isArray(tableDataIncluded) || tableDataIncluded.length === 0) {
         return
     }
-    ensuresRequiredProps( credentials, [...requiredPropsCredentials, 'database'] )
+    ensuresRequiredPropsCredentials( credentials, [...requiredPropsCredentials, 'database'] )
     const { pool, client } = await connectToDatabase( credentials )
     const stringTableData = tableDataIncluded.map(value => `tmp_${value.table_name}`).join(',')
     try {
@@ -142,53 +165,52 @@ export const afterRestore = async (credentials, tableDataIncluded) => {
         await pool.end()
     }
 }
-
-async function dumpDb({ host, port, user, password, database, filePath, dataTableToExclude = [] }) {
-    const { stdout, stderr } = await pgDump(
-      {
-        port, // defaults to 5432
-        host,
-        database,
-        username: user,
-        password,
-      },
-      {
-        format: FormatEnum.Custom,
-        filePath,
-        excludeTableDataPattern: dataTableToExclude
-      },
-    )
-  }
   
-  async function restoreDb({ host, port, user, password, database, filePath }) {
-    const { stdout, stderr } = await pgRestore(
-      {
-        port, // defaults to 5432
-        host,
-        database,
-        username: user,
-        password,
-      },
-      { filePath }
-    )
-  }
-  
-  export const generateDb = async ({ host, user, password, port, srcDatabase, dstDatabase, payrolls }) => {
+export const generateDb = async ({ host, user, password, port, srcDatabase, dstDatabase, payrolls }) => {
     const credentials = { host, user, password, port }
-    const rows = await getDatabases(credentials)
+
+    const rows = await getAllDatabases(credentials)
+
+
     const datNames = rows.map(({ datname }) => datname)
     if (datNames.includes(dstDatabase)) throw new Error('Database already exists')
     const tempId = uniqueId()
     const filePath = `${srcDatabase}${tempId}.dump`
     const { dataTableToExclude, tableDataToInclude } = getSchemaSpecifics(payrolls)
     await prepareForDump({ ...credentials, database: srcDatabase }, tableDataToInclude)
-    await dumpDb({ ...credentials, filePath, database: srcDatabase, dataTableToExclude })
+    // await dumpDb({ ...credentials, filePath, database: srcDatabase, dataTableToExclude })
+    await pgDump(
+        {
+            port,
+            host,
+            database: srcDatabase,
+            username: user,
+            password,
+        },
+        {
+            format: FormatEnum.Custom,
+            filePath,
+            excludeTableDataPattern: dataTableToExclude
+        }
+    )
     await afterDump({ ...credentials, database: srcDatabase }, tableDataToInclude)
     const tableDataIncluded = JSON.parse(JSON.stringify(tableDataToInclude))
     await createDatabase(credentials, dstDatabase)
-    await restoreDb({ ...credentials, filePath, database: dstDatabase })
+    // await restoreDb({ ...credentials, filePath, database: dstDatabase })
+    await pgRestore(
+        {
+            port,
+            host,
+            database: dstDatabase,
+            username: user,
+            password,
+        },
+        { 
+            filePath
+        }
+    )
     await afterRestore({ ...credentials, database: dstDatabase }, tableDataIncluded)
     unlink(`./${filePath}`, (err) => {
-      if (err) console.error(err)
+        if (err) console.error(err)
     })
-  }
+}

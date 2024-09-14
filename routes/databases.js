@@ -1,4 +1,4 @@
-import { getDatabases, generateDb, getPayrollsFromDatabase } from '../models/postgresql/pg.js'
+import { getAllDatabases, generateDb, getPayrollsFromDatabase } from '../models/postgresql/pg.js'
 import { Router } from 'express'
 
 const databasesRouter = Router()
@@ -7,7 +7,7 @@ databasesRouter.get('/', async (req, res) => {
     const { host, user, password, port } = req.body.payload
     const credentials = { host, user, password, port }
 
-    const rows = await getDatabases(credentials)
+    const rows = await getAllDatabases(credentials)
     res.status(200).send({ data: rows, success: true })
 })
 
