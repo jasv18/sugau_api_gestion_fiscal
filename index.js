@@ -1,7 +1,10 @@
 import { createServer } from 'node:http'
 import logger from './utils/logger.js'
 import { PORT } from './utils/config.js'
-import app from './app.js'
+import { createApp } from './app.js'
+import { PgModel } from './models/postgresql/pg.js'
+
+const app = createApp({ model: PgModel })
 
 const server = createServer(app)
 

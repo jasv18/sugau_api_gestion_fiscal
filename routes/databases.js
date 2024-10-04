@@ -1,36 +1,16 @@
-import { getAllDatabases, generateDb, getPayrollsFromDatabase } from '../models/postgresql/pg.js'
+import { PgController } from '../controllers/pg.js'
 import { Router } from 'express'
 
-const databasesRouter = Router()
+export function createDatabaseManagerRouter({ model }) {
+    const dbManagerRouter = Router()
 
-databasesRouter.get('/', async (req, res) => {
-    const { host, user, password, port } = req.body.payload
-    const credentials = { host, user, password, port }
+    const pgController = new PgController({ model })
+    
+    dbManagerRouter.get('/', pgController.getAllDatabases)
+    
+    dbManagerRouter.get('/:srcdatabase/payrolls', pgController.getPayrollsFromDatabase)
+    
+    dbManagerRouter.post('/:srcdatabase/generate', pgController.generateDb)
 
-    const rows = await getAllDatabases(credentials)
-    res.status(200).send({ data: rows, success: true })
-})
-
-databasesRouter.get('/:srcdatabase/payrolls', async (req, res) => {
-    const database = req.params.srcdatabase
-    const { host, user, password, port } = req.body.payload
-    const credentials = { host, user, password, port }
-    const rows = await getPayrollsFromDatabase({ ...credentials, database})
-    res.status(200).send({ data: rows, success: true })
-})
-
-databasesRouter.post('/:srcdatabase/generate', async(req, res) => {
-    const srcDatabase = req.params.srcdatabase
-    const { host, user, password, port, database: dstDatabase, payrolls } = req.body.payload
-    const credentials = { host, user, password, port }
-    await generateDb({
-        ... credentials,
-        srcDatabase,
-        dstDatabase,
-        payrolls
-    })
-    res.status(200).send({ success: true })
-})
-
-export default databasesRouter
-
+    return dbManagerRouter
+}

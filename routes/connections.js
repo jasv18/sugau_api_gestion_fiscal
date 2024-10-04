@@ -1,14 +1,12 @@
-import { connectionValidation } from '../models/postgresql/pg.js'
+import { PgController } from '../controllers/pg.js'
 import { Router } from 'express'
 
-const connectionsRoutes = Router()
+export function createConnectionRouter({ model }) {
+    const connectionsRouter = Router()
 
-connectionsRoutes.post('/validate', async (req, res) => {
-    const { host, user, password, port } = req.body.payload
-    const credentials = { host, user, password, port }
+    const pgController = new PgController({ model })
 
-    await connectionValidation(credentials)
-    res.status(200).send({ success: true })
-})
+    connectionsRouter.post('/validate', pgController.validateConnection)
 
-export default connectionsRoutes
+    return connectionsRouter
+}
