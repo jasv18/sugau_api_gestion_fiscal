@@ -1,12 +1,9 @@
-import { PgController } from '../controllers/pg.js'
 import { Router } from 'express'
 
-export function createConnectionRouter({ model }) {
+export function createConnectionRouter({ controller }) {
     const connectionsRouter = Router()
 
-    const pgController = new PgController({ model })
-
-    connectionsRouter.post('/validate', pgController.validateConnection)
+    connectionsRouter.post('/validate', controller.validateConnection)
 
     return connectionsRouter
 }

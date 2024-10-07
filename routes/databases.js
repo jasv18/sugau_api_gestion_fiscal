@@ -1,16 +1,13 @@
-import { PgController } from '../controllers/pg.js'
 import { Router } from 'express'
 
-export function createDatabaseManagerRouter({ model }) {
+export function createDatabaseManagerRouter({ controller }) {
     const dbManagerRouter = Router()
-
-    const pgController = new PgController({ model })
     
-    dbManagerRouter.get('/', pgController.getAllDatabases)
+    dbManagerRouter.get('/', controller.getAllDatabases)
     
-    dbManagerRouter.get('/:srcdatabase/payrolls', pgController.getPayrollsFromDatabase)
+    dbManagerRouter.get('/:srcdatabase/payrolls', controller.getPayrollsFromDatabase)
     
-    dbManagerRouter.post('/:srcdatabase/generate', pgController.generateDb)
+    dbManagerRouter.post('/:srcdatabase/generate', controller.generateDb)
 
     return dbManagerRouter
 }

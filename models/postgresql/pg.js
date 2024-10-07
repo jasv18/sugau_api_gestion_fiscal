@@ -60,7 +60,7 @@ export class PgModel {
         ensuresRequiredPropsCredentials( credentials, requiredPropsCredentials )
         const { pool, client } = await connectToDatabase( credentials )
         try {
-            const { rows } = await client.query("SELECT * FROM pg_database WHERE UPPER(datname) SIMILAR TO UPPER('$1')",[databasename])
+            const { rows } = await client.query("SELECT * FROM pg_database WHERE UPPER(datname) = UPPER('$1');",[databasename])
             return rows
         } catch (e) {
             throw e
@@ -129,12 +129,13 @@ export class PgModel {
     
     static async createDatabase ( credentials, databasename) {
         if (!databasename) { throw new Error('new database name missing') }
+        if (!isValueValid(regexA, databasename)) { throw new Error('invalid databasename') }
         ensuresRequiredPropsCredentials( credentials, [...requiredPropsCredentials] )
         const { pool, client } = await connectToDatabase( credentials )
         try {
             // await client.query(`drop database if exists ${databasename}`)
-            await client.query("create database $1 with template template0", [databasename])
-            await client.query("update pg_database set encoding=16 where datname='$1'", [databasename])
+            await client.query(`create database ${databasename} with template template0;`)
+            await client.query(`update pg_database set encoding=16 where datname='${databasename}';`)
         } catch (e) {
             throw e
         } finally {
@@ -171,15 +172,15 @@ export class PgModel {
     static async generateDb ({ host, user, password, port, srcDatabase, dstDatabase, payrolls }) {
         const credentials = { host, user, password, port }
     
-        const rows = await getAllDatabases(credentials)
+        const rows = await this.getAllDatabases(credentials)
     
     
         const datNames = rows.map(({ datname }) => datname)
         if (datNames.includes(dstDatabase)) throw new Error('Database already exists')
         const tempId = uniqueId()
-        const filePath = `${srcDatabase}${tempId}.dump`
+        const filePath = `${srcDatabase}_${tempId}.dump`
         const { dataTableToExclude, tableDataToInclude } = getSchemaSpecifics(payrolls)
-        await prepareForDump({ ...credentials, database: srcDatabase }, tableDataToInclude)
+        await this.prepareForDump({ ...credentials, database: srcDatabase }, tableDataToInclude)
         // await dumpDb({ ...credentials, filePath, database: srcDatabase, dataTableToExclude })
         await pgDump(
             {
@@ -195,9 +196,9 @@ export class PgModel {
                 excludeTableDataPattern: dataTableToExclude
             }
         )
-        await afterDump({ ...credentials, database: srcDatabase }, tableDataToInclude)
+        await this.afterDump({ ...credentials, database: srcDatabase }, tableDataToInclude)
         const tableDataIncluded = JSON.parse(JSON.stringify(tableDataToInclude))
-        await createDatabase(credentials, dstDatabase)
+        await this.createDatabase(credentials, dstDatabase)
         // await restoreDb({ ...credentials, filePath, database: dstDatabase })
         await pgRestore(
             {
@@ -211,7 +212,7 @@ export class PgModel {
                 filePath
             }
         )
-        await afterRestore({ ...credentials, database: dstDatabase }, tableDataIncluded)
+        await this.afterRestore({ ...credentials, database: dstDatabase }, tableDataIncluded)
         unlink(`./${filePath}`, (err) => {
             if (err) console.error(err)
         })
